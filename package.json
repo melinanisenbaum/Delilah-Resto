@@ -1,0 +1,30 @@
+{
+  "name": "delilah-resto",
+  "version": "1.0.0",
+  "description": "for 3rd proyect ACAMICA",
+  "main": "app.js",
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development nodemon app.js",
+    "start": "cross-env NODE_ENV=production node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/melinanisenbaum/Delilah-Resto.git"
+  },
+  "author": "Melina Nisenbaum",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/melinanisenbaum/Delilah-Resto/issues"
+  },
+  "homepage": "https://github.com/melinanisenbaum/Delilah-Resto#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "cross-env": "^7.0.3",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "mariadb": "^2.5.2",
+    "morgan": "^1.10.0",
+    "multer": "^1.4.2",
+    "mysql2": "^2.2.5"
+  }
+}
