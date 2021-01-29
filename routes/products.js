@@ -1,11 +1,10 @@
 const { Router } = require('express');
+const sequelize = require('../config/database');
 //const products = require('../models/products');
 const router = Router();//define rutas del servidor en forma ordenada
 
-const mysql2Connection = require('../config/database');
-
 router.get('/', async (req, res) => {
-    mysql2Connection.query('SELECT * products', (err, rows, fields) => {
+    sequelize.query('SELECT * products FROM delilahResto', (err, rows, fields) => {
         if(!err) {
             res.json(rows);
         } else {
@@ -14,7 +13,7 @@ router.get('/', async (req, res) => {
     })
     //const products = await Products.find();
     //res.send(products);
-    res.status('200: ok');
+    //res.status('200: ok');
     //const productItems = await product.find();
     //res.json(products)
 });
