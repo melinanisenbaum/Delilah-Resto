@@ -1,27 +1,11 @@
 const server = require('./config/server.js');
+const express = require('express');//tengo que llamar express, bparser, y routas de nuevo llamando al archivo del servidor donde ya estan?
 
-require('./routes')(app);
+const app = express();
+const bodyParser = require('body-parser');
 
-//const express = require('express');
+app.use(express.json());
+app.use(bodyParser.json());
 
-//Initialization
-//const app = express();
+app.use(require('./routes/products'));
 
-// const users = [
-//     {id = 1, name = 'melina'}
-// ]
-
-// app.get('/users', (req, res) => {
-//     res.json(users);
-// });
-
-// app.get('/users/:userId', (req, res) => {
-//     console.log(req.params);
-//     res.status(200);
-//     res.body('The update has been succesfull');
-// });
-
-// app.put('/users/:userId', (req, res) => {
-//     console.log(req.body);
-//     res.json(users.find(user => user.id === req.params.id));
-// });
