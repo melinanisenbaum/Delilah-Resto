@@ -1,9 +1,14 @@
+const config = require('./config.js');
 const { Sequelize } = require('sequelize');
 
-const sequelize = new Sequelize('delilahResto', 'root', 'rootserver', {
-    dialect: 'mysql',
-    host: 'localhost',
-})
+//const dotenv = require('dotenv');
+//dotenv.config({ path: './.env'});
+
+const sequelize = new Sequelize(config.DB_DATABASE, config.DB_USERNAME, config.DB_PASSWORD, {
+  dialect: config.DB_DIALECT,
+  host: config.HOST,
+  port: config.DB_PORT,
+});
 
 try {
     sequelize.authenticate();

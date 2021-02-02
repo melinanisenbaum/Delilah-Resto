@@ -9,7 +9,13 @@ servers:
   # Added by API Auto Mocking Plugin
   - description: SwaggerHub API Auto Mocking
     url: https://virtserver.swaggerhub.com/melinanisenbaum/DelilahResto/1.0.0
-    
+
+services:
+  mysql:
+    environment:
+      - MYSQL_DATABASE="delilahResto"
+    ports:
+      - "3300:3300"    
 # tags are used for organizing operations
 tags:
 - name: admin
