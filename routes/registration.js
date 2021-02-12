@@ -1,0 +1,3 @@
+app.post('/', createAccountLimiter, function(req, res) {
+  //...
+});

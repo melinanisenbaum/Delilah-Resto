@@ -18,13 +18,21 @@
   },
   "homepage": "https://github.com/melinanisenbaum/Delilah-Resto#readme",
   "dependencies": {
+    "bcrypt": "^5.0.0",
     "body-parser": "^1.19.0",
     "cross-env": "^7.0.3",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
+    "express-rate-limit": "^5.2.5",
+    "express-validator": "^6.9.2",
+    "helmet": "^4.4.1",
+    "jsonwebtoken": "^8.5.1",
+    "moment": "^2.29.1",
+    "momment": "0.0.1",
     "morgan": "^1.10.0",
     "multer": "^1.4.2",
     "mysql2": "^2.2.5",
+    "path": "^0.12.7",
     "sequelize": "^6.5.0"
   }
 }

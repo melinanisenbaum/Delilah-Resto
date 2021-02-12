@@ -1,10 +1,12 @@
 const { Router } = require('express');
-const db = require('../config/database');
-//const products = require('../models/products');
+const { verifyToken } = require('../utils/utils.js');
+const { sequelize } = require('../config/database');
+const { db } = require('../config/database');
 const router = Router();//define rutas del servidor en forma ordenada
 
 router.get('/', async (req, res) => {
-    db.query('SELECT * products FROM delilahResto', (err, rows, fields) => {
+    db.query('SELECT * products FROM delilahResto', (err, rows) => {
+        console.log(db.query);
         if(!err) {
             res.json(rows);
         } else {
@@ -13,42 +15,55 @@ router.get('/', async (req, res) => {
     })
 });
 
-router.get('/:id', async (req, res) => {
-    const { id } = req.params;
-    console.log(id);
-    db.query('SELECT * products FROM delilahResto WHERE id = ?', [id], (err, rows, fields) => {
-        if(!err) {
-            res.json(rows);
-        } else {
-            console.log(err);
-        }
-    })
-});
+router.post('/', verifyToken, async (req, res) => {
+    const { id, name, imageURL, price } = req.body;
+    const query = 'CALL productAddOrEddit (?, ?, ?, ?)';
 
-router.post('/', async (req, res) => {
-    const { id, name, salary } = req.body;
-    const query = `
-    SET @id = ?;
-    SET @name = ?;
-    SET @imageURL = ?;
-    SET @price = ?;
-    CALL employeeAddOrEddit (@id, @name, @imageURL, @price);`;
     db.query(query, [id, name], (err, rows, fields) => {
         if(!err) {
-            res.json({Status: 'Product saved'});
+            res.json({Status: 'The product has been saved'});
         } else {
             console.log(err);
         }
     })
 });
 
-router.patch('/productId:', async (req, res) => {
-    console.log(res.body),
-    res.send('received')
+// router.get('/:productId', async (req, res) => {
+//     const { id } = req.params;
+//     console.log(id);
+//     db.query('SELECT * products FROM delilahResto WHERE id = ?', [id], (err, rows, fields) => {
+//         if(!err) {
+//             res.json(rows);
+//         } else {
+//             console.log(err);
+//         }
+//     })
+// });
+
+router.put('/productId:', verifyToken, async (req, res) => {
+    const { name, imageURL, price } = req.body;
+    const { productId } = req.params;
+    const query = 'CALL employeeAddOrEddit (?, ?, ?)';
+    
+    db.query(query, [productId, name, imageURL, price], (err, rows, fields) => {
+        if(!err) {
+            res.json({Status: 'The update has been succesfull'});
+        } else {
+            console.log(err);
+            res.status(400).send('not ok')
+        }
+    })
 });
 
-router.delete('/productId:', async (req, res) => {
-    res.send('Product id ${productId} has been deleted')
+router.delete('/productId:', verifyToken, async (req, res) => {
+    const { productId } = req.params.productId;
+    db.query('DELETE FROM products WHERE id = ?', [productId], (err, rows, fields) => {
+        if(!err) {
+            res.json({Status: 'Product id ${productId} has been deleted'});
+        } else {
+            console.log(err);
+        }
+    })
 });
 
 module.exports = router
