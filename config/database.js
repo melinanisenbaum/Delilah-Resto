@@ -1,9 +1,5 @@
-if (process.env.NODE_ENV === 'development') {
-  require('dotenv').config();
-}
-
-const config = require('./config.js');
 const { Sequelize } = require('sequelize');
+const config = require('./config.js');
 
 const db = new Sequelize(
   config.DB_DATABASE,
@@ -14,7 +10,7 @@ const db = new Sequelize(
     host: config.HOST,
     port: config.DB_PORT,
     charset: 'utf8',
-    loggin: true,
+    login: true,
     define: {
       timestamps: false,
       underscored: true,

@@ -1,8 +1,6 @@
 const { Router } = require('express');
-const { verifyToken } = require('../utils/utils.js');
-const { sequelize } = require('../config/database');
-const { db } = require('../config/database');
-const router = Router();//define rutas del servidor en forma ordenada
+const { verifyToken } = require('../utils/utils');
+const router = Router();
 
 router.get('/', async (req, res) => {
     db.query('SELECT * products FROM delilahResto', (err, rows) => {

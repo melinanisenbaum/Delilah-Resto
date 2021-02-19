@@ -4,6 +4,7 @@ const { db } = require('../config/database');
 //const users = require('../models/users');
 const router = Router();
 
+
 router.get('/', verifyToken, filterAdmin, async (req, res) => {
     db.query('SELECT * users FROM delilahResto', (err, rows, fields) => {
         if(!err) {

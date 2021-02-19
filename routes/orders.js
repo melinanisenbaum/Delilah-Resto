@@ -1,8 +1,6 @@
 const { Router } = require('express');
-const { verifyToken } = require('../utils/utils.js');
-const { db } = require('../config/database');
-//const products = require('../models/products');
 const router = Router();
+const { verifyToken } = require('../utils/utils.js');
 
 router.get('/', verifyToken, async (req, res) => {
     db.query('SELECT * orders FROM delilahResto', (err, rows, fields) => {

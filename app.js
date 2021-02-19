@@ -1,15 +1,17 @@
-if (process.env.NODE_ENV === 'development') {
-    require('dotenv').config();
-}
+require('dotenv').config();
 
-const express = require('express');//tengo que llamar express, bparser, y routas de nuevo llamando al archivo del servidor donde ya estan?
+const express = require('express');
 const bodyParser = require('body-parser');
 const multer = require('multer');//manejo de imagenes
 const morgan = require('morgan');//dev
 const path = require('path');//manejo de directorios 
 const config = require('./config/config.js');
-const { limiter } = require('./utils/utils.js');
+const { limiter, verifyToken } = require('./utils/utils.js');
+const { db } = require('../config/database');
+const { sequelize } = require('../config/database');
 const helmet = require('helmet');//seguridad
+const { Router } = require('express');
+const router = Router();
 
 const app = express();
 
@@ -30,18 +32,18 @@ app.use(limiter);
 
 
 //Routes
-app.use('/login', require('./routes/authentication'));
-app.use('/registration', require('./routes/registration'));
+//app.use('/login', require('./r    outes/login'));
+//app.use('/registration', require('./routes/registration'));
 app.use('/products', require('./routes/products'));
-app.use('/users', require('./routes/users'));
+app.use('/users', require('./routes/users')); 
 app.use('/orders', require('./routes/orders'));
 
 //Static files(le digo al servidor que archivos van al navegador: htmls css, imagenes, etc)
 app.use(express.static(path.join(__dirname, 'public')));
 
-//helpers
+//helpers 
 
-//Starting server
+//Starting server 
 app.listen(config.PORT, config.HOST, function () {
     console.log(`App listening on port http://${config.HOST}:${config.PORT}`);
 });
