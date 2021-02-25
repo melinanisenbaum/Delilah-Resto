@@ -1,7 +1,9 @@
 const { Router } = require('express');
 const router = Router();
 const jwt = require('jsonwebtoken');
-
+const { db } = require('../config/database.js');
+const config = require('../config/config.js');
+const { limiter } = require('../utils/utils.js');
 const users = db.query('SELECT * users FROM delilahResto');
 const tokenSecret = config.TOKENSECRET;
 
@@ -17,3 +19,5 @@ router.post('/', validateUser, limiter, (req, res) => {//no funciona
     res.status(200),
     res.json({token});
 });
+
+module.exports = router

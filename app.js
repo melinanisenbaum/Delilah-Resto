@@ -7,8 +7,8 @@ const morgan = require('morgan');//dev
 const path = require('path');//manejo de directorios 
 const config = require('./config/config.js');
 const { limiter, verifyToken } = require('./utils/utils.js');
-const { db } = require('../config/database');
-const { sequelize } = require('../config/database');
+const { db } = require('./config/database.js');
+const { sequelize } = require('./config/database.js');
 const helmet = require('helmet');//seguridad
 const { Router } = require('express');
 const router = Router();
@@ -32,8 +32,9 @@ app.use(limiter);
 
 
 //Routes
-//app.use('/login', require('./r    outes/login'));
-//app.use('/registration', require('./routes/registration'));
+app.use('/', require('./routes/index'));
+app.use('/login', require('./routes/login'));
+app.use('/registration', require('./routes/registration'));
 app.use('/products', require('./routes/products'));
 app.use('/users', require('./routes/users')); 
 app.use('/orders', require('./routes/orders'));
@@ -47,3 +48,5 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.listen(config.PORT, config.HOST, function () {
     console.log(`App listening on port http://${config.HOST}:${config.PORT}`);
 });
+
+module.exports = { config, db, app }

@@ -1,6 +1,6 @@
 const { Router } = require('express');
 const { verifyToken, filterAdmin } = require('../utils/utils.js');
-const { db } = require('../config/database');
+//const { db } = require('../config/database');
 //const users = require('../models/users');
 const router = Router();
 

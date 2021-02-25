@@ -11,6 +11,12 @@ const db = new Sequelize(
     port: config.DB_PORT,
     charset: 'utf8',
     login: true,
+    dialectOptions: {
+      dateStrings: true,
+      typeCast: true,
+      //useUTC: false, //for reading from database
+    },
+    timezone: "-03:00", //for writing to database
     define: {
       timestamps: false,
       underscored: true,
