@@ -6,7 +6,7 @@ const config = require('../config/config.js');
 const { limiter } = require('../utils/utils.js');
 const users = db.query('SELECT * users FROM delilahResto');
 const tokenSecret = config.TOKENSECRET;
-
+//const authController = require('../controllers/auth_controller')
 const validateUser = (req, res, next) => {
     if(users.some(user => user.username === req.body.username && user.password === req.body.password))
         next()

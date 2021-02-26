@@ -1,5 +1,5 @@
-const bcrypt = require("bcrypt");
-const moment = require("moment");
+const bcrypt = require('bcrypt');
+const moment = require('moment');
 
 module.exports = (sequelize, DataTypes) => {
   const Auth = sequelize.define('Auth', {

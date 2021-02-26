@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS products (
     PRIMARY KEY(productId)
 );
 
+SHOW products;
+
 DESCRIBE products;
 
 INSERT INTO products values
@@ -24,7 +26,7 @@ CREATE TABLE IF NOT EXISTS users (
 	username VARCHAR(16) DEFAULT NULL,
     fullname VARCHAR(60) DEFAULT NULL,
     email VARCHAR(60) DEFAULT NULL,
-    phone INT(12) DEFAULT NULL,
+    phone VARCHAR(15) DEFAULT NULL,
     adress VARCHAR(60) DEFAULT NULL,
     password  VARCHAR(60) DEFAULT NULL,
     PRIMARY KEY(userId)
