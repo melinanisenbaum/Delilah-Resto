@@ -26,7 +26,7 @@ module.exports = (sequelize, DataTypes) => {
         },
     },
     {
-      underscored: true,
+        underscored: true,
     },
     {
         timestamps: false

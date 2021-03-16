@@ -28,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
       underscored: true,
     },
     {
-        timestamps: false
+      timestamps: false
     },
   );
   return Payment;

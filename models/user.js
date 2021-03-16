@@ -17,12 +17,12 @@ module.exports = (sequelize, DataTypes) => {
                     notEmpty: {
                         msg: 'Username required',
                     },
-                },
-            },
+                },         
                 unique: {
                     args: true,
                     msg: 'This user already exists',
                 },
+            },
             fullname: {
                 field:'fullname',
                 type: DataTypes.STRING(60),
@@ -44,6 +44,7 @@ module.exports = (sequelize, DataTypes) => {
                     args: true,
                     msg: 'This email already exists',
                 },
+            },
             phone: {
                 field: 'phone_number',
                 type: DataTypes.STRING(12),
@@ -67,23 +68,18 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.INTEGER,
                 defaultValue: 0,
             },
-            enable: {
-                field: "user_enable",
-                type: DataTypes.INTEGER,
-                defaultValue: 1,
-            },
             createdAt: {
                 field: "user_created_at",
                 type: DataTypes.DATE,
                 defaultValue: moment().format("YYYY-MM-DD HH:mm:ss"),
             },
-        },   
-        {
-            underscored: true,
         },
         {
-            timestamps: false,
+            underscored: true
+        },   
+        {
+            timestamps: false
         }
     );
-    return Product;
+    return User;
 };

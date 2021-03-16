@@ -1,7 +1,9 @@
 const { Sequelize } = require('sequelize');
 const config = require('./config.js');
 
-const db = new Sequelize(
+//console.log(config);
+
+const sequelize = new Sequelize(
   config.DB_DATABASE,
   config.DB_USERNAME,
   config.DB_PASSWORD,
@@ -9,37 +11,47 @@ const db = new Sequelize(
     dialect: config.DB_DIALECT,
     host: config.HOST,
     port: config.DB_PORT,
-    charset: 'utf8',
-    login: true,
+    login: true,   
     dialectOptions: {
-      dateStrings: true,
-      typeCast: true,
-      //useUTC: false, //for reading from database
+      charset: 'utf8'
     },
     timezone: "-03:00", //for writing to database
     define: {
       timestamps: false,
       underscored: true,
     },
+    pool: {
+      max: 5,
+      min: 0,
+      idle: 20000,
+      acquire: 20000
+    }
   }
 );
 
+//sequelize.sync();//crea nuevas tablas de acuerdo a los modelos
+
 try {
-    db.authenticate();
+    sequelize.authenticate();
     console.log('Connection to database has been established successfully.');
   } catch (error) {
     console.error('Unable to connect to the database:', error);
   }
 
-// db.auth = require('../models/auth')(Sequelize);
-// db.order = require('../models/order')(Sequelize);
-// db.order_product = require('../models/order_product')(Sequelize);
-// db.payment = require('../models/payment')(Sequelize);
-// db.product = require('../models/product')(Sequelize);
-// db.status = require('../models/status')(Sequelize);
-// db.user = require('../models/user')(Sequelize);
+  const db = {};
 
-// db.auth.belongsTo(db.user);
+  db.Sequelize = Sequelize;
+  db.sequelize = sequelize;
+
+db.auth = require('../models/auth')(sequelize, Sequelize);
+db.order = require('../models/order')(sequelize, Sequelize);
+db.order_product = require('../models/order_product')(sequelize, Sequelize);
+db.payment = require('../models/payment')(sequelize, Sequelize);
+//db.product = require('../models/product')(sequelize, Sequelize); tira error
+db.status = require('../models/status')(sequelize, Sequelize);
+//db.user = require('../models/user')(sequelize, Sequelize);//tira error
+
+// db.auth.belongsTo(db.user); tira error
 // db.user.hasMany(db.auth);
 
 // db.order.belongsTo(db.user);

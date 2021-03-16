@@ -2,6 +2,10 @@ const { Router } = require('express');
 const { verifyToken } = require('../utils/utils');
 const router = Router();
 
+router.get('/', (req, res) => {
+    res.json({message: "Hello"});
+  });
+  
 router.get('/', async (req, res) => {
     db.query('SELECT * products FROM delilahResto', (err, rows) => {
         console.log(db.query);

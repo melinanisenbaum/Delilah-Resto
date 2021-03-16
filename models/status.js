@@ -24,12 +24,8 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: moment().format("YYYY-MM-DD HH:mm:ss"),
         },
       },
-      {
-        underscored: true
-      },
-      {
-          timestamps: false
-      }
+      {underscored: true},
+      {timestamps: false}
   );
   return Status;
 };

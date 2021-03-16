@@ -6,6 +6,6 @@ module.exports = {
     DB_USERNAME: process.env.DB_USERNAME,
     DB_PASSWORD: process.env.DB_PASSWORD,
     DB_DIALECT: 'mysql',
-    DB_PORT: process.env.PORT,
+    DB_PORT: process.env.DB_PORT,
     TOKENSECRET: process.env.TOKENSECRET
 }

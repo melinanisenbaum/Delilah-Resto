@@ -4,7 +4,7 @@ const moment = require('moment');
 //const { db } = require('../config/database.js');
 
 module.exports = (Sequelize, DataTypes) => {
-    const Product = Sequelize.define('product', {
+    const Product = Sequelize.define('product', {//aca tira error
         productId: {
             field: 'product_id',
             type: DataTypes.INTEGER,
@@ -42,5 +42,5 @@ module.exports = (Sequelize, DataTypes) => {
         {underscored: true},
         {timestamps: false},
     );
-    return User;
+    return Product;
 };
