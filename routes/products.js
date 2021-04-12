@@ -1,71 +1,129 @@
 const { Router } = require('express');
-const { verifyToken } = require('../utils/utils');
+const { authRole, findProduct} = require('../utils/utils');
 const router = Router();
+const { db } = require('../config/database');
+const { QueryTypes } = require('sequelize');
+const { body, validationResult } = require('express-validator');
 
-router.get('/', (req, res) => {
-    res.json({message: "Hello"});
-  });
-  
 router.get('/', async (req, res) => {
-    db.query('SELECT * products FROM delilahResto', (err, rows) => {
-        console.log(db.query);
-        if(!err) {
-            res.json(rows);
-        } else {
-            console.log(err);
+    const products = await db.query('SELECT * FROM products',
+        {
+        type: QueryTypes.SELECT
         }
-    })
+    );
+
+    if(products) {
+        res.status(200).json(products);
+    } else {
+        res.status(400);
+    }
 });
 
-router.post('/', verifyToken, async (req, res) => {
-    const { id, name, imageURL, price } = req.body;
-    const query = 'CALL productAddOrEddit (?, ?, ?, ?)';
+router.get('/:productId', async (req, res) => {
 
-    db.query(query, [id, name], (err, rows, fields) => {
-        if(!err) {
-            res.json({Status: 'The product has been saved'});
-        } else {
-            console.log(err);
+    const productId = +req.params.productId;
+      
+    const productData = await db.query(
+      `SELECT * FROM products WHERE productId = :productId`, 
+        {
+          replacements: { productId },
+          type: QueryTypes.SELECT
         }
-    })
-});
-
-// router.get('/:productId', async (req, res) => {
-//     const { id } = req.params;
-//     console.log(id);
-//     db.query('SELECT * products FROM delilahResto WHERE id = ?', [id], (err, rows, fields) => {
-//         if(!err) {
-//             res.json(rows);
-//         } else {
-//             console.log(err);
-//         }
-//     })
-// });
-
-router.put('/productId:', verifyToken, async (req, res) => {
-    const { name, imageURL, price } = req.body;
-    const { productId } = req.params;
-    const query = 'CALL employeeAddOrEddit (?, ?, ?)';
+    );
     
-    db.query(query, [productId, name, imageURL, price], (err, rows, fields) => {
-        if(!err) {
-            res.json({Status: 'The update has been succesfull'});
-        } else {
-            console.log(err);
-            res.status(400).send('not ok')
-        }
-    })
-});
+    if(productData.length === 0) {
+      return res.status(404).send({ message: 'Not found'});
+    } else {
+      return res.status(200).json(productData);
+    }
+  });
 
-router.delete('/productId:', verifyToken, async (req, res) => {
-    const { productId } = req.params.productId;
-    db.query('DELETE FROM products WHERE id = ?', [productId], (err, rows, fields) => {
-        if(!err) {
-            res.json({Status: 'Product id ${productId} has been deleted'});
-        } else {
-            console.log(err);
+router.post(
+    '/',
+    authRole(1),
+    body('pname').not().isEmpty().trim().escape(),
+    body('imgURL').isEmpty().trim().escape(),
+    body('price').isInt(),
+  
+    async (req, res) => {
+        const errors = validationResult(req);
+      
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ errors: errors.array() });
+        };
+      
+        const { pname, imgURL, price } = req.body; 
+
+        const alreadyExistProduct = await db.query(
+            'SELECT * FROM products WHERE pname = :pname',
+            {
+                replacements: { pname },
+                type: QueryTypes.SELECT,
+            }
+        );
+      
+        if (alreadyExistProduct.length > 0) {
+            return res.status(409).send({ error: 'The product already exists!' }).end();
         }
-    })
-});
+
+        else {
+            const createUser = await db.query(
+            'INSERT INTO products (pname, imgURL, price) VALUES (:pname, :imgURL, :price)',
+            { 
+                replacements: { pname, imgURL, price },
+                type: QueryTypes.INSERT,
+            }
+            );
+            res.status(200).send({ message: 'The product has been saved'});
+        }
+    }
+);
+
+router.put(
+    '/:productId',
+    authRole(1), 
+    body('pname').not().isEmpty().trim().escape(),
+    body('imgURL').isEmpty().trim().escape(),
+    body('price').isInt(),
+    async (req, res) => {
+      const errors = validationResult(req);
+        
+      if (!errors.isEmpty()) {
+        return res.status(400).send({ message: 'The product could not been updated' });
+      };
+  
+      const { pname, imgURL, price } = req.body;
+      const productId = +req.params.productId;
+        
+      await db.query(
+        `UPDATE products SET pname = :pname, imgURL = :imgURL, price = :price WHERE productId = :productId`,
+        { 
+          replacements: { productId, pname, imgURL, price },
+          type: QueryTypes.UPDATE,
+        }
+      );
+
+      res.status(200).send({ message: 'The update has been succesfull' });
+    }
+  );
+
+router.delete('/:productId', authRole(1), async (req, res) => {
+    const productId = +req.params.productId;
+  
+    if (!findProduct(productId)) {
+      res.status(404).send({ message: 'The product does not exist'})
+    }
+  
+    if (findProduct(productId)) {
+      await db.query(
+        `DELETE FROM products WHERE productId = :productId`,
+        {
+          replacements: { productId },
+          type: QueryTypes.DELETE,
+        }
+      )
+      res.status(200). send({ message: 'The product has been deleted' });
+    }
+  });
 
 module.exports = router

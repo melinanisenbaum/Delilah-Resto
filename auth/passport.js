@@ -1,22 +1,34 @@
+//no la utilizo en esta API
+
 const passport = require('passport');
 const passportJwt = require('passport-jwt');
 const user = require('../models/user');
 const ExtractJwt = passportJwt.ExtractJwt;
 const StrategyJwt = passportJwt.Strategy;
-const USer = require('../models/user');
+const { db } = require('../config/database');
+const { QueryTypes } = require('sequelize');
 
 //validation del jwt
 
 passport.use(
     new StrategyJwt(
         {
-            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken,
+            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             secretOrKey: process.env.TOKENSECRET,
         },
-        function (jwtPayload, done) {
-            return user.findOne({ where: { id: jwtPayload.id } })
-            .then((user) => {
-                return done(null, user);
+        async function (jwtPayload, done) {
+            const id = jwtPayload.id;
+            const findUser = await db.query(
+                `SELECT * FROM users WHERE userId = :id`,
+                {
+                    replacements: { id },
+                    type: QueryTypes.SELECT
+                }
+            );
+
+            return findUser
+            .then((findUser) => {
+                return done(null, findUser);
             })
             .catch((err) => {
             return done(err);

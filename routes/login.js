@@ -3,44 +3,56 @@ const router = Router();
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { db } = require('../config/database.js');
-const config = require('../config/config.js');
-const { QueryTypes } = require("sequelize");
-const { limiter } = require('../utils/utils.js');
-
-
-//TIRA ERROR EL POSTMAN CON UN GET TAMBIEN
-// router.get('/', (req, res) => {
-//     res.json({message: "Hello"});
-//   });
+const { QueryTypes } = require('sequelize');
+const { limiter, generateAccessToken, generateRefreshToken, getUserId } = require('../utils/utils.js');
 
 router.post('/', limiter, async (req, res) => {
     
-    const {username, passwd} = req.body;
-    
-    const getUsername = await db.query(
-        'SELECT * FROM users WHERE username = :username OR email = :username',
+    const { username, passwd } = req.body;
+
+    const getUser = await db.query(
+        `SELECT * FROM users WHERE username = :username OR email = :username`,
         {
-            replacements: {
-              username,
-            },
-            type: QueryTypes.SELECT,
+            replacements: { username },
+            type: QueryTypes.SELECT
         }
-    ).catch((err) => {
-        console.log('Error: ', err)
-    });
+    );
+    
+    const id = getUser[0].userId;
 
-    if(!getUsername) {
-        return res.json({ message: 'Username or password does not match!'})
+    const auth_pass = await db.query(
+        `SELECT * FROM auths WHERE userId = :id`, 
+        {
+            replacements: { id },
+            type: QueryTypes.SELECT
+        }
+    );
+
+    const hash = auth_pass[0].auth_pass;
+    
+    const result = bcrypt.compareSync(passwd, hash);
+        
+    if( getUser.length === 0 ) {
+        res.status(400).send({ error: 'Username or password does not match!' }).end();
+        console.log('mal usuario')
     }
 
-    if(getUsername.passwd !== passwd) {
-        return res.json({ message: 'Username or password does not match!'})
+    if ( getUser.length > 0 && !result) {
+        return res.status(400).send({ error: 'Username or password does not match!' }).end();
     }
 
-    const jwtToken = jwt.sign({id: getUsername.id, email: getUsername.email, admin: false }, process.env.TOKENSECRET);
+    else {
 
-    res.json({ message: 'Welcome back!', token: jwtToken });
-
+        const user = {
+            id: getUser[0].userId,
+            email: getUser[0].email,
+            role: getUser[0].isAdmin
+        }
+        const accessToken = jwt.sign(user, process.env.TOKENSECRET);//, {expiresIn: '30m'});
+        const refreshToken = jwt.sign(user, process.env.REFRESH_TOKENSECRET);
+        res.status(200);
+        res.json({ accessToken: accessToken, refreshToken: refreshToken });
+    }
 });
 
 module.exports = router

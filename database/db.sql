@@ -9,38 +9,27 @@ CREATE TABLE IF NOT EXISTS products (
     PRIMARY KEY(productId)
 );
 
-DESCRIBE products;
-
 INSERT INTO products (pName, imgURL, price)
 VALUES 
 	('Hamburguesa clasica', null, 350),
     ('Sandwich veggie', null, 310),
     ('Veggie avocado', null, 310);
 
-SELECT * FROM products;
-
 CREATE TABLE IF NOT EXISTS users (
 	userId INT NOT NULL AUTO_INCREMENT,
 	username VARCHAR(45) NOT NULL UNIQUE,
     fullname VARCHAR(60) NOT NULL,
-    email VARCHAR(60),
+    email VARCHAR(60) UNIQUE,
     phone VARCHAR(15),
     adress VARCHAR(60) NOT NULL,
-    passwd  VARCHAR(60) NOT NULL,
+    isAdmin BOOLEAN NOT NULL DEFAULT 0,
     PRIMARY KEY(userId)
 );
-
-DESCRIBE users;
 
 INSERT INTO users (username, fullname, email, phone, adress, passwd)
 VALUES
 	('queen_freddie', 'Freddie Mercury', 'freddiemercury@gmail.com', +447712345678, '1 Logan PIKensingtn, Loondon W8 ^DE, UK', '111djgfjhgf'),
     ('melina', 'Meli Nisen', 'melinap@hotmail.com', +542234567890, 'mi direccion en mdp 7600 ba', 'jhgrfjhdgf333');
-
-SELECT * FROM users;
-
-ALTER TABLE users
-ADD UNIQUE(email);
 
 CREATE TABLE IF NOT EXISTS order_status (
 	stat_id INT NOT NULL AUTO_INCREMENT,
@@ -57,8 +46,6 @@ VALUES
     ('cancelado'),
     ('entregado');
 
-SELECT * FROM order_status;
-
 CREATE TABLE IF NOT EXISTS payment (
 	paym_id INT NOT NULL AUTO_INCREMENT,
     paym_name VARCHAR(30) NOT NULL UNIQUE,
@@ -71,11 +58,9 @@ VALUES
     ('debito'),
     ('credito');
 
-SELECT * FROM payment;
-
 CREATE TABLE IF NOT EXISTS order_product (
 	op_id INT NOT NULL AUTO_INCREMENT,
-    op_datetime DATETIME NOT NULL,
+    op_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     productId INT NOT NULL,
     orderId INT NOT NULL,
     userId INT NOT NULL,
@@ -89,9 +74,9 @@ CREATE TABLE IF NOT EXISTS order_product (
 
 CREATE TABLE IF NOT EXISTS orders (
 	orderId INT NOT NULL AUTO_INCREMENT,
-    order_status INT,
-    order_datetime DATETIME NOT NULL,
-    payment INT,
+    stat_id INT,
+    order_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    paym_id INT,
     userId INT,
     delivery_adress VARCHAR(60),
     PRIMARY KEY(orderId),
@@ -100,5 +85,15 @@ CREATE TABLE IF NOT EXISTS orders (
     FOREIGN KEY (payment) REFERENCES payment(paym_id),
     FOREIGN KEY (delivery_adress) REFERENCES users(adress)
 );
+
+CREATE TABLE IF NOT EXISTS auths (
+	authId INT NOT NULL AUTO_INCREMENT,
+    auth_pass TEXT,
+    userId INT DEFAULT NULL,
+    PRIMARY KEY (authId),
+    KEY (userId),
+    CONSTRAINT auths_fk_1 FOREIGN KEY (userId) REFERENCES users (userId) ON DELETE SET NULL ON UPDATE CASCADE
+);
+
 
 

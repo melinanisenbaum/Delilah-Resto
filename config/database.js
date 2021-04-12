@@ -1,8 +1,6 @@
 const { Sequelize } = require('sequelize');
 const config = require('./config.js');
 
-//console.log(config);
-
 const sequelize = new Sequelize(
   config.DB_DATABASE,
   config.DB_USERNAME,
@@ -38,18 +36,18 @@ try {
     console.error('Unable to connect to the database:', error);
   }
 
-  const db = {};
+  const db = sequelize;
 
-  db.Sequelize = Sequelize;
-  db.sequelize = sequelize;
+//   db.Sequelize = Sequelize;
+//   db.sequelize = sequelize;
 
-db.auth = require('../models/auth')(sequelize, Sequelize);
-db.order = require('../models/order')(sequelize, Sequelize);
-db.order_product = require('../models/order_product')(sequelize, Sequelize);
-db.payment = require('../models/payment')(sequelize, Sequelize);
-//db.product = require('../models/product')(sequelize, Sequelize); tira error
-db.status = require('../models/status')(sequelize, Sequelize);
-//db.user = require('../models/user')(sequelize, Sequelize);//tira error
+// db.auth = require('../models/auth')(sequelize, Sequelize);
+// db.order = require('../models/order')(sequelize, Sequelize);
+// db.order_product = require('../models/order_product')(sequelize, Sequelize);
+// db.payment = require('../models/payment')(sequelize, Sequelize);
+// db.product = require('../models/product')(sequelize, Sequelize); tira error
+// db.status = require('../models/status')(sequelize, Sequelize);
+// db.user = require('../models/user')(sequelize, Sequelize);//tira error
 
 // db.auth.belongsTo(db.user); tira error
 // db.user.hasMany(db.auth);

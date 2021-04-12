@@ -1,51 +1,69 @@
 const { Router } = require('express');
 const router = Router();
-const User = require('../models/user');
+const { body, validationResult } = require('express-validator');
 const { db } = require('../config/database');
 const { QueryTypes } = require ('sequelize');
 const { createAccountLimiter } = require('../utils/utils.js');
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
-// TIRA ERROR EN EL REQUEST. NO ENCUENTRA DB?
+router.post(
+  '/',
+  createAccountLimiter,
+  body('username').not().isEmpty().trim().escape(),
+  body('fullname').not().isEmpty().trim().escape(),
+  body('email').isEmail().normalizeEmail(),
+  body('phone').not().isEmpty().trim().escape(),
+  body('adress').not().isEmpty().trim().escape(),
+  body('passwd').isLength({ min: 8 }),
+  
+  async (req, res) => {
+      const errors = validationResult(req);
+      
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      };
+      
+      const { username, fullname, email, phone, adress } = req.body; 
 
-router.post('/', createAccountLimiter, async (req, res) => {
+      const alreadyExistUser = await db.query(
+        'SELECT * FROM users WHERE fullname = :fullname OR email = :email',
+        {
+          replacements: { fullname, email },
+          type: QueryTypes.SELECT,
+        }
+      );
+      
+      if (alreadyExistUser.length > 0) {
+        return res.status(409).send({ error: 'The user already exists!' }).end();
+      }
 
-  const user = {
-    username: req.body.username,
-    fullname: req.body.fullname,
-    email: req.body.email,
-    phone: req.body.phone,
-    adress: req.body.adress
-  }; 
+      else {
 
-  console.log(user);
+        const createUser = await db.query(
+          'INSERT INTO users (username, fullname, email, phone, adress) VALUES (:username, :fullname, :email, :phone, :adress)',
+          { 
+            replacements: { username, fullname, email, phone, adress },
+            type: QueryTypes.INSERT,
+          }
+        );
 
-  const alreadyExistUser = await db.query(
-    'SELECT * FROM users WHERE fullname = :fullname OR email = :email',
-    {
-     replacements: { username },
-      type: QueryTypes.SELECT
-    }).catch((err) => {
-      console.log('Error: ', err)
-    });
+        const newUserId = +createUser[0];
 
-  //cont newUser = new User({ username, fullname, email, phone, adress }); para usar con sequelize y modelos
-  const createUser = await db.query(
-    'INSERT INTO users (username, fullname, email, phone, adress) VALUES (:username, :fullname, :email, :phone, :adress)',
-    { replacements: user,
-      type: QueryTypes.INSERT,
-    }. catch((err) => {
-    console.log('Error: ', err);
-    res.json({ error: 'Cannot register user at the moment!'})
-    }
-  ));
+        const { passwd } = req.body;
 
-  if (createUser) {
-    console.log(createUser);
-    res.json({ message: 'Thanks for registering' });
-  }
-  if (alreadyExistUser) {
-    return res.json ({ message: 'User with email already exist!' });
-  }
-});
+        bcrypt.hash(passwd, saltRounds, async function(err, hash) {
+          await db.query(
+            'INSERT INTO auths (auth_pass, userId) VALUES (:hash, :newUserId)',
+            {
+              replacements: { hash, newUserId},
+              type: QueryTypes.INSERT,
+            }
+          );
+        });
+
+        res.json({ message: 'Thanks for registering' });
+      }
+  });
 
 module.exports = router

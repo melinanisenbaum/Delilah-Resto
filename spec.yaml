@@ -33,13 +33,11 @@ paths:
             schema:
               $ref: '#/components/schemas/user'
       responses: 
-        '201':
-          description: the user has been created
+        '200':
+          description: loggin succesfull
         '400':
           description: invalid input, object invalid
-        '409':
-          description: the present user already exists
-  /registration:
+  /register:
     post:
       tags:
         - user
@@ -79,29 +77,10 @@ paths:
         '400':
           description: bad input parameter
         '403':
-          description: unauthorized response
+          description: unauthorized request
         '404':
           description: users with the specified query were not found
-    post:
-      tags:
-        - user
-      summary: Creates a user
-      operationId: createUser
-      description: By sending a complete form, the user can register in the system
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/user'
-      responses: 
-        '201':
-          description: the user has been created
-        '400':
-          description: invalid input, object invalid
-        '409':
-          description: the present user already exists
-  /users/userId:
+  /users/:userId:
     get:
       tags:
         - user
@@ -113,15 +92,13 @@ paths:
         - $ref: '#/components/parameters/password'
       responses:
         '200':
-          description: correct login
+          description: user account is available
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/user'
-        '400':
-          description: The specified password is invalid
         '404':
-          description: The specified usename was not found
+          description: The specified user was not found
     put:
       tags:
         - user
@@ -142,8 +119,6 @@ paths:
           description: the update has been succesfull
         '400':
           description: the account could not been updated
-        '401':
-          description: an authentication is required
     delete:
       tags:
         - user
@@ -152,12 +127,12 @@ paths:
       description: deletes an individual user information and id in the system.
       responses:
         '200':
-          description: the action has been succesfull
-        '401':
-          description: an authentication is required
+          description: User :id has been deleted
+        '404':
+          description: The user does not exist
         '409':
           description: server conflict. The account cannot be deleted in this moment.
-  /users/userId/orders:
+  /users/:userId/orders:
     get:
       tags:
         - user
@@ -191,12 +166,13 @@ paths:
           description: the order has been created
         '400':
           description: invalid input, object invalid
-  /users/userId/orders/orderId:
-    get:
+  /users/:userId/orders/:orderId:
+    put:
       tags:
         - user
-      summary: Returns an specific order.
-      operationId: getOrder
+        - admin
+      summary: Updates an specific order.
+      operationId: updateOrder
       responses:
         '200':
           description: returns results
@@ -208,6 +184,7 @@ paths:
           description: unauthorized response
         '503':
           description: service unavailable
+  /users/:userId/orders/delete/:orderId:
     delete:
       tags:
         - user
@@ -219,8 +196,8 @@ paths:
           description: the action has been succesfull
         '401':
           description: an authentication is required
-        '409':
-          description: server conflict. The product cannot be deleted in this moment
+        '404':
+          description: The order does not exist
   /products:
     get:
       tags:
@@ -258,13 +235,36 @@ paths:
             schema:
               $ref: '#/components/schemas/product'
       responses: 
-        '201':
-          description: the product has been saved
+        '200':
+          description: The product has been saved
         '400':
           description: invalid input, object invalid
         '409':
-          description: the present product already exists
-  /products/productId:
+          description: The product already exists!
+  /products/:productId:
+    get:
+      tags:
+        - admin
+        - user
+      summary: Returns an specified product.
+      operationId: getProduct
+      description: By passing in the appropriate options, you can search for selected
+        product in the system.
+      parameters:
+        - $ref: '#/components/parameters/filter'
+      responses:
+        '200':
+          description: returns results matching criteria
+          content:
+            multipart/form-data:
+              schema: 
+                $ref: '#/components/schemas/ArrayOfProducts'
+        '400':
+          description: bad input parameter
+        '403':
+          description: unauthorized response
+        '404':
+          description: products with the specified query parameter were not found
     put:
       tags:
         - admin
@@ -314,17 +314,15 @@ paths:
             multipart/form-data:
               schema: 
                 $ref: '#/components/schemas/ArrayOfOrders'
-        '400':
-          description: bad input parameter
         '403':
           description: unauthorized response
         '404':
           description: products with the specified query parameter were not found
-  /orders/orderId:
+  /orders/:orderId:
     put:
       tags:
         - admin
-      summary: Updates an existing order
+      summary: Updates the status of an existing order
       operationId: updateOrder
       description: updates an individual order information in the system.
       requestBody:

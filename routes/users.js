@@ -1,122 +1,255 @@
 const { Router } = require('express');
-const passport = require('passport');
-const { verifyToken, filterAdmin } = require('../utils/utils.js');
-//const { db } = require('../config/database');
-//const users = require('../models/users');
+const { body, validationResult } = require('express-validator');
+const { authRole, authUser, findUser, findProduct, totalPrice, findOrder } = require('../utils/utils.js');
+const { db } = require('../config/database');
+const { QueryTypes } = require('sequelize');
 const router = Router();
+const bcrypt = require('bcrypt');
+const user = require('../models/user.js');
+const saltRounds = 10;
 
-router.get('/', (req, res) => {
-    res.json({message: "Hello"});
-  });
-  
-// router.get('/', passport.authenticate('jwt', { session: false }), async (req, res) => {
-//     db.query('SELECT * users FROM delilahResto', (err, rows, fields) => {
-//         if(!err) {
-//             res.json(rows);
-//         } else {
-//             console.log(err);
-//         }
-//     })
-// });
+router.get('/', authRole(1), async (req, res) => {
+  const data = await db.query(`SELECT * FROM users`,
+    {
+      type: QueryTypes.SELECT
+    }
+  );
 
-// router.post('/', verifyToken, async (req, res) => {
-//     const { userId, username, nameAndLastname, email, phone, adress, password } = req.body;
-//     const query = 'CALL userAddOrEddit (?, ?, ?, ?, ?, ?, ?)';
+  if(data) {
+      res.status(200).json(data);
+  } else {
+      res.status(400);
+    }
+});
 
-//     db.query(query, [userId, username], (err, rows, fields) => {//ver otro ejemplo
-//         if(!err) {
-//             res.json({Status: 'The user has been created'});
-//         } else {
-//             console.log(err);
-//         }
-//     })
-// });
+router.get('/:userId', authUser(), async (req, res) => {
 
-// router.get('/:userId', verifyToken, async (req, res) => {
-//     const { userId } = req.params;
-  
-//     db.query('SELECT * users FROM delilahResto WHERE id = ?', [userId], (err, rows, fields) => {
-//         if(!err) {
-//             res.json(rows);
-//         } else {
-//             console.log(err);
-//         }
-//     })
-// });
-
-// router.get('/:userId/orders', verifyToken, async (req, res) => {
-//     const { userId } = req.params;
-   
-//     db.query('SELECT * users FROM delilahResto WHERE id = ?', [userId], (err, rows, fields) => {
-//         if(!err) {
-//             res.json(rows);//aca hay que ver lo que tiene que mostrar
-//         } else {
-//             console.log(err);
-//         }
-//     })
-// });
-
-// router.post('/:userId/orders', async (req, res) => {
-//     const { userId, username, nameAndLastname, email, phone, adress, password } = req.body;
-//     const query = 'CALL userAddOrEddit (?, ?, ?, ?, ?, ?, ?)';
-
-//     db.query(query, [userId, username, nameAndLastname, email, phone, adress, password], (err, rows, fields) => {//ver otro ejemplo
-//         if(!err) {
-//             res.json({Status: 'The order has been created'});
-//         } else {
-//             console.log(err);
-//         }
-//     })
-// });
-
-// router.get('/:userId/orders/orderId', async (req, res) => {
-//     const { orderId } = req.params;
-//     const { userId } = req.params;
-   
-//     db.query('SELECT * users FROM delilahResto WHERE userId = ? AND SELECT FROM userId = ? WHERE orderId = ?', [userId, orderId], (err, rows, fields) => {
-//         if(!err) {
-//             res.json(rows);//aca hay que ver lo que tiene que mostrar
-//         } else {
-//             console.log(err);
-//         }
-//     })
-// });
-
-// router.delete('/:userId/orders/orderId', async (req, res) => {
-//     const { orderId } = req.params;
-
-//     db.query('DELETE FROM orders WHERE orderId = ?', [orderId], (err, rows, fields) => {
-//         if(!err) {
-//             res.json({Status: 'order id ${orderId} has been deleted'});
-//         } else {
-//             console.log(err);
-//         }
-//     })
-// });
-
-// router.put('/userId:', async (req, res) => {
-//     const { username, nameAndLastname, email, phone, adress, password } = req.body;
-//     const { userId } = req.params;
-//     const query = 'CALL userAddOrEddit (?, ?, ?, ?, ?, ?, ?)';
+  const userId = +req.params.userId;
     
-//     db.query(query, [userId, nameAndLastname], (err, rows, fields) => {
-//         if(!err) {
-//             res.json({status: 'The update has been succesfull'});
-//         } else {
-//             console.log(err);
-//         }
-//     })
-// });
+  const userData = await db.query(
+    `SELECT * FROM users WHERE userId = :userId`, 
+      {
+        replacements: { userId },
+        type: QueryTypes.SELECT
+      }
+  );
+  
+  if(userData.length === 0) {
+    return res.status(404).send({ message: 'Not found'});
+  } else {
+    return res.status(200).json(userData);
+  }
+});
 
-// router.delete('/userId:', async (req, res) => {
-//     const { userId } = req.params;
-//     db.query('DELETE FROM users WHERE userId = ?', [userId], (err, rows, fields) => {
-//         if(!err) {
-//             res.json({Status: 'User id ${userId} has been deleted'});
-//         } else {
-//             console.log(err);
-//         }
-//     })
-// });
+router.put(
+  '/:userId',
+  authUser(), 
+  body('email').isEmail().normalizeEmail(),
+  body('phone').not().isEmpty().trim().escape(),
+  body('adress').not().isEmpty().trim().escape(),
+  body('passwd').isLength({ min: 8 }),
+  async (req, res) => {
+    const errors = validationResult(req);
+      
+    if (!errors.isEmpty()) {
+      return res.status(400).send({ message: 'The account could not been updated' });
+    };
+
+    const { email, phone, adress, passwd } = req.body;
+    const userId = +req.params.userId;
+      
+    await db.query(
+      `UPDATE users SET email = :email, phone = :phone, adress = :adress WHERE userId = :userId`,
+      { 
+        replacements: { email, phone, adress, userId },
+        type: QueryTypes.UPDATE,
+      }
+    );
+    findUser(userId);
+
+    if (user.id === userId) {  
+      bcrypt.hash(passwd, saltRounds, async function(err, hash) {
+        
+        await db.query(
+          `UPDATE auths SET auth_pass = :hash WHERE userId = :userId`,
+          {
+            replacements: { hash, userId },
+            type: QueryTypes.UPDATE,
+          }
+        )
+      });
+    } 
+
+    res.status(200).send({ message: 'The update has been succesfull' });
+  }
+);
+
+router.delete('/delete/:userId', authUser(), async (req, res) => {
+  const userId = +req.params.userId;
+
+  if (!findUser(userId)) {
+    res.status(404).send({ message: 'The user does not exist'})
+  }
+
+  if (findUser(userId)) {
+    await db.query(
+      `DELETE FROM users WHERE userId = :userId`,
+      {
+        replacements: { userId },
+        type: QueryTypes.DELETE,
+      }
+    )
+    await db.query(
+      `DELETE FROM auths WHERE userId = :userId`,
+      {
+        replacements: { userId },
+        type: QueryTypes.DELETE,
+      }
+    )
+    res.status(200). send({ message: 'User id has been deleted' });
+  }
+});
+
+router.post('/:userId/orders', async (req, res) => {//falta poder cargar varios productos
+  const paym_id = +req.body.paym_id;
+  const userId = +req.params.userId;
+  const stat_id = +1;
+
+  const createOrder = await db.query(
+      `INSERT INTO orders (stat_id, paym_id, userId) VALUES (:stat_id, :paym_id, :userId)`,
+      { 
+        replacements: { stat_id, paym_id, userId },
+        type: QueryTypes.INSERT,
+      }
+  );
+
+  const orderId = +createOrder[0];
+  console.log(orderId);
+
+  const productsQuery = req.body.products.map((p) =>
+    db.query( `SELECT * FROM products WHERE productId = :productId`,
+      {
+        replacements: { productId: +p.productId },
+        type: QueryTypes.SELECT,
+      }
+    )
+  );
+
+  const products = await Promise.all(productsQuery);
+  console.log(products);
+ 
+  if (createOrder) {
+    const order_product = products.map(async(p, key) => {
+      const op_quantity = +req.body.products[key].op_quantity;
+      const productId = +req.body.products[key].productId;
+      const op_price = await totalPrice(op_quantity, productId);
+
+        await db.query(
+          `INSERT INTO order_product (userId, orderId, productId, op_quantity, op_price) VALUES (:userId, :orderId, :productId, :op_quantity, :op_price)`,
+          { 
+            replacements: { 
+              userId,
+              orderId,
+              productId,
+              op_quantity,
+              op_price
+            },
+            type: QueryTypes.INSERT,
+          }
+        )
+      });
+      
+      await Promise.all(order_product);
+
+    res.status(200).send({ message: 'A new order has been created' });
+  }
+});
+      
+router.get('/:userId/orders', authUser(), async (req, res) => {
+  const userId = +req.params.userId;
+  const data = await db.query(
+    `SELECT 
+      order_status.stat_name,
+      orders.order_datetime,
+      orders.orderId,    
+      payment.paym_name,
+      users.fullname,
+      users.adress
+    FROM orders
+    INNER JOIN order_status ON orders.stat_id = order_status.stat_id
+    INNER JOIN payment ON orders.paym_id = payment.paym_id
+    INNER JOIN users ON orders.userId = users.userId
+    WHERE orders.userId = :userId`,      
+    {
+      replacements: { userId },
+      type: QueryTypes.SELECT
+    }
+  );
+
+  if(data) {
+      res.status(200).json(data);
+  } else {
+      res.status(400);
+    }
+});
+
+router.get('/:userId/orders/:orderId', authUser(), async (req, res) => {
+  const orderId = +req.params.orderId;
+  const data = await db.query(
+    `SELECT 
+      order_status.stat_name,
+      orders.order_datetime,
+      orders.orderId,    
+      payment.paym_name,
+      users.fullname,
+      users.adress
+    FROM orders
+    INNER JOIN order_status ON orders.stat_id = order_status.stat_id
+    INNER JOIN payment ON orders.paym_id = payment.paym_id
+    INNER JOIN users ON orders.userId = users.userId
+    WHERE orders.orderId = :orderId`,      
+    {
+      replacements: { orderId },
+      type: QueryTypes.SELECT
+    }
+  );
+
+  if(data) {
+      res.status(200).json(data);
+  } else {
+      res.status(400);
+    }
+});
+
+router.delete('/:userId/orders/delete/:orderId', authUser(), async (req, res) => {
+  const orderId = +req.params.orderId;
+  const getOrder = await findOrder(orderId);
+
+  if (!getOrder) {
+    res.status(404).send({ message: 'The order does not exist'})
+  }
+
+  if (getOrder) {
+    const deleteOP = await db.query(
+      `DELETE FROM order_product WHERE orderId = :orderId`,
+      {
+        replacements: { orderId },
+        type: QueryTypes.DELETE,
+      }
+    );
+    if (deleteOP) {
+      await db.query(
+        `DELETE FROM orders WHERE orderId = :orderId`,
+        {
+          replacements: { orderId },
+          type: QueryTypes.DELETE,
+        }
+      )
+      res.status(200).send({ message: 'The order has been deleted'});
+    }
+  }
+});
+
+
 
 module.exports = router
